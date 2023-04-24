@@ -1,9 +1,7 @@
 #----------------------------------------------------------
-#  Terraform - From Zero to Certified Professional
 #
 # Build WebServer during Bootstrap
 #
-# Made by rr
 #----------------------------------------------------------
 
 provider "aws" {
