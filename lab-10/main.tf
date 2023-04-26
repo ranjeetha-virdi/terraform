@@ -43,6 +43,38 @@ resource "aws_secretsmanager_secret_version" "rds_password" {
 
 }
 
+#Store all details of RDS in SecretsManager
+
+resource "aws_secretsmanager_secret" "rds" {
+  name                    = "/prod/rds/all"
+  description             = "Store all details for RDS DB in Secrets Manager"
+  recovery_window_in_days = 0
+}
+
+#Retrive all details
+
+resource "aws_secretsmanager_secret_version" "rds" {
+
+  secret_id = aws_secretsmanager_secret.rds.id
+  secret_string = jsonencode({
+    rds_address  = aws_db_instance.prod.address
+    rds_port     = aws_db_instance.prod.port
+    rds_username = aws_db_instance.prod.username
+    rds_password = random_password.main.result
+  })
+
+}
+
+
+
+data "aws_secretsmanager_secret_version" "rds" {
+  secret_id  = aws_secretsmanager_secret.rds.id
+  depends_on = [aws_secretsmanager_secret_version.rds]
+}
+
+
+
+
 data "aws_secretsmanager_secret_version" "rds_password" {
   secret_id  = aws_secretsmanager_secret.rds_password.id
   depends_on = [aws_secretsmanager_secret_version.rds_password]
@@ -51,18 +83,22 @@ data "aws_secretsmanager_secret_version" "rds_password" {
 ########################################### outputs ###############################################
 
 output "rds_address" {
-  value = aws_db_instance.prod.address
+  value = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)["rds_address"]
 }
 
 output "rds_port" {
-  value = aws_db_instance.prod.port
+  value = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)["rds_port"]
 }
 
 output "rds_username" {
-  value = aws_db_instance.prod.username
+  value = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)["rds_username"]
 }
 
 output "rds_password" {
-  value     = random_password.main.result
+  value     = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)["rds_password"]
   sensitive = true
+}
+
+output "rds_all" {
+  value = jsondecode(data.aws_secretsmanager_secret_version.rds.secret_string)
 }
