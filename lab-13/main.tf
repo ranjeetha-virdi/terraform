@@ -1,3 +1,9 @@
+
+
+######### HighlyAvailable Web with Green/Blue Deployment
+
+
+
 provider "aws" {
   region = "us-west-2"
 }
